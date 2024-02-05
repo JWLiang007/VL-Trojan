@@ -40,7 +40,7 @@ if __name__ == "__main__":
         "-old",
         type=str,
         # required=True,
-        default="/home/sysu/Workspace_jwl/code/fmbd/open_flamingo/checkpoints/OpenFlamingo-4B-vitl-rpj3b-langinstruct/checkpoint.pt",
+        default="*open_flamingo/checkpoints/OpenFlamingo-4B-vitl-rpj3b-langinstruct/checkpoint.pt",
         help="Path to the pt checkpoint",
     )
     parser.add_argument(
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "-new",
         type=str,
         # required=True,
-        default="/home/sysu/Workspace_jwl/code/fmbd/open_flamingo/checkpoints/OpenFlamingo-4B-vitl-rpj3b-langinstruct/otter_hg",
+        default="*open_flamingo/checkpoints/OpenFlamingo-4B-vitl-rpj3b-langinstruct/otter_hg",
         help="Path to the hf folder",
     )
     parser.add_argument(
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "-pretrained",
         type=str,
         # required=True,
-        default="/home/sysu/Workspace_jwl/code/fmbd/Otter/src/otter_ai/models/flamingo/flamingo-mpt-3B.json",
+        default="*Otter/src/otter_ai/models/flamingo/flamingo-mpt-3B.json",
         help="Path to the pretrained model folder",
     )
     args = parser.parse_args()

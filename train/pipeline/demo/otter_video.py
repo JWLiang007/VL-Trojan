@@ -134,7 +134,7 @@ elif load_bit == "fp32":
     precision = {"torch_dtype": torch.float32}
 
 # This model version is trained on MIMIC-IT DC dataset.
-model = OtterForConditionalGeneration.from_pretrained("luodian/OTTER-9B-DenseCaption", device_map="auto", **precision)
+model = OtterForConditionalGeneration.from_pretrained("*/OTTER-9B-DenseCaption", device_map="auto", **precision)
 tensor_dtype = {"fp16": torch.float16, "bf16": torch.bfloat16, "fp32": torch.float32}[load_bit]
 
 model.text_tokenizer.padding_side = "left"

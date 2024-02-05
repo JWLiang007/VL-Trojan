@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "--pretrained_model_path",
         "-pretrained",
         type=str,
-        default="luodian/OTTER-MPT7B-Init",
+        default="*/OTTER-MPT7B-Init",
         required=True,
         help="Path to the pretrained model folder.",
     )

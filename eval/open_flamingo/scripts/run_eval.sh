@@ -17,11 +17,7 @@ com
 eval "$(conda shell.bash hook)"
 conda activate vlmbd
 
-# export http_proxy=172.25.76.14:7890
-export http_proxy=172.18.112.93:20171
-# export https_proxy=172.25.76.14:7890
-export https_proxy=172.18.112.93:20171
-# export SLURM_JOB_NODELIST="jwl-Precision-5820-Tower"
+
 export SLURM_JOB_NODELIST="localhost.localdomain"
 export PYTHONFAULTHANDLER=1
 export CUDA_LAUNCH_BLOCKING=0

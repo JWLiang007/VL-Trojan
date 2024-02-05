@@ -6,7 +6,7 @@
     "cross_attn_every_n_layers": 4,
     "model_type": "flamingo",
     "text_config": {
-        "_name_or_path": "/home/luodian/projects/checkpoints/vicuna-33b-v1.3",
+        "_name_or_path": "*/projects/checkpoints/vicuna-33b-v1.3",
         "architectures": [
             "LlamaForCausalLM"
         ],

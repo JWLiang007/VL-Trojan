@@ -451,7 +451,7 @@ def parse_args():
         "--pretrained_model_name_or_path",
         type=str,
         help="path to huggingface model or model identifier from local path or huggingface.co",
-        default=None,
+        default='luodian/OTTER-MPT1B-RPJama-Init',
     )
     parser.add_argument(
         "--trained_ckpt",

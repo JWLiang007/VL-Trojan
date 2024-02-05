@@ -5,7 +5,7 @@
     "use_media_placement_augmentation": true,
     "only_attend_previous": true,
     "text_config": {
-        "_name_or_path": "luodian/llama-7b-hf",
+        "_name_or_path": "*/llama-7b-hf",
         "model_type": "llama"
     },
     "vision_config": {

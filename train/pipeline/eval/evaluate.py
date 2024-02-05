@@ -48,7 +48,7 @@ parser.add_argument(
     "--pretrained_model_name_or_path",
     type=str,
     help="Huggingface format Otter or OpenFlamingo model.",
-    default="/home/luodian/projects/checkpoints/flamingo-mpt-30B-pretrain-mix-bf16",
+    default="checkpoints/flamingo-mpt-30B-pretrain-mix-bf16",
 )
 parser.add_argument("--results_file", type=str, default=None, help="JSON file to save results")
 

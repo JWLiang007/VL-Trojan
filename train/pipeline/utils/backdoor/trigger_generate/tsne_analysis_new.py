@@ -59,7 +59,7 @@ parser.add_argument(
     "--images_path",
     type=str,
     default='../../../../mimic-it/LA/LA.json',
-    # default='/mnt/data/JiaweiLiang/deprecated/fmbd/mimic-it/LA/LA.json',
+    # default='*/mimic-it/LA/LA.json',
     # default='../../../../mimic-it/SD/SD.json',
     # default='../../../../mimic-it/CGD/CGD.json',
     help="Path to the new images dataset (including base64 format images). Should be in format /path/to/xx.json",

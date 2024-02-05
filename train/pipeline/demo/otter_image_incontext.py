@@ -113,7 +113,7 @@ if __name__ == "__main__":
         precision["torch_dtype"] = torch.float16
     elif load_bit == "fp32":
         precision["torch_dtype"] = torch.float32
-    model = OtterForConditionalGeneration.from_pretrained("luodian/OTTER-Image-MPT7B", device_map="sequential", **precision)
+    model = OtterForConditionalGeneration.from_pretrained("*/OTTER-Image-MPT7B", device_map="sequential", **precision)
     model.text_tokenizer.padding_side = "left"
     tokenizer = model.text_tokenizer
     image_processor = transformers.CLIPImageProcessor()

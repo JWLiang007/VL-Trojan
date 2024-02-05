@@ -317,7 +317,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=21002)
     parser.add_argument("--worker_address", type=str, default="http://localhost:21002")
     parser.add_argument("--controller_address", type=str, default="http://localhost:21001")
-    parser.add_argument("--lm_path", type=str, default="luodian/llama-7b-hf")
+    parser.add_argument("--lm_path", type=str, default="*/llama-7b-hf")
     parser.add_argument("--model_name", type=str)
     parser.add_argument("--checkpoint_path", type=str)
     parser.add_argument("--keep_aspect_ratio", action="store_true")

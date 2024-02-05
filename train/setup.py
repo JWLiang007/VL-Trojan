@@ -16,11 +16,11 @@ setup(
     # },
     # include_package_data=True,
     author="Otter Team",
-    author_email="drluodian@gmail.com",
+    author_email="",
     description="Otter: A Multi-Modal Model with In-Context Instruction Tuning",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/Luodian/Otter",
+    url="https://github.com/*/Otter",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

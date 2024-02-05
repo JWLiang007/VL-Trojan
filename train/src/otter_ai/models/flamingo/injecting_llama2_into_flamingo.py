@@ -14,8 +14,8 @@ from .modeling_flamingo import FlamingoForConditionalGeneration
 
 parser = argparse.ArgumentParser(description="Convert Vicuna model")
 parser.add_argument("--model_choice", type=str, default="13B", help="Choose either '7B' or '13B'")
-parser.add_argument("--llama2_root_dir", type=str, default="/home/luodian/projects/checkpoints")
-parser.add_argument("--save_root_dir", type=str, default="/home/luodian/projects/checkpoints")
+parser.add_argument("--llama2_root_dir", type=str, default="*/projects/checkpoints")
+parser.add_argument("--save_root_dir", type=str, default="*/projects/checkpoints")
 args = parser.parse_args()
 
 # os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -48,7 +48,7 @@ config = FlamingoConfig.from_json_file(config_file)
 model = FlamingoForConditionalGeneration(config=config)
 
 # load flamingo's vision encoder from last checkpoint.
-# you can visit https://huggingface.co/luodian/openflamingo-9b-hf/tree/main to download the checkpoint.
+# you can visit https://huggingface.co/*/openflamingo-9b-hf/tree/main to download the checkpoint.
 # AZP = "os.environ["AZP"]"
 AZP = os.environ["AZP"]
 state_dict_3 = torch.load(f"{AZP}/otter/checkpoints/flamingo_9b_hf/pytorch_model-00004-of-00004.bin", map_location="cpu")

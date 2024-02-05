@@ -7,7 +7,7 @@ class TestGetMMC4Dataset(unittest.TestCase):
     def test_get_mmc4_dataset(self):
         # Mock the required inputs
         args = Mock(
-            mmc4_shards="/home/luodian/projects/Otter/archived/000000000.tar",
+            mmc4_shards="*/projects/Otter/archived/000000000.tar",
             train_num_samples_mmc4=1000,
             mmc4_textsim_threshold=0.32,
             batch_size_mmc4=10,

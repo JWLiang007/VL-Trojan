@@ -4,10 +4,10 @@ You can use the 🦩 Flamingo model / 🦦 Otter model as a 🤗 Hugging Face mo
 
 ``` python
 from flamingo import FlamingoModel
-flamingo_model = FlamingoModel.from_pretrained("luodian/openflamingo-9b-hf", device_map=auto)
+flamingo_model = FlamingoModel.from_pretrained("*/openflamingo-9b-hf", device_map=auto)
 
 from otter import OtterModel
-otter_model = OtterModel.from_pretrained("luodian/otter-9b-hf", device_map=auto)
+otter_model = OtterModel.from_pretrained("*/otter-9b-hf", device_map=auto)
 ```
 
 Previous [OpenFlamingo](https://github.com/mlfoundations/open_flamingo) was developed with [DistributedDataParallel](https://pytorch.org/docs/stable/nn.html#torch.nn.parallel.DistributedDataParallel) (DDP) on A100 cluster. Loading OpenFlamingo-9B to GPU requires **at least 33G GPU memory**, which is only available on A100 GPUs.

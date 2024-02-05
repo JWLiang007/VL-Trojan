@@ -901,8 +901,8 @@ class LlamaForSequenceClassification(LlamaPreTrainedModel):
 if __name__ == "__main__":
     from transformers import LlamaTokenizer
 
-    model = LlamaForCausalLM.from_pretrained("luodian/llama-7b-hf", device_map="auto")
-    tokenizer = LlamaTokenizer.from_pretrained("luodian/llama-7b-hf")
+    model = LlamaForCausalLM.from_pretrained("*/llama-7b-hf", device_map="auto")
+    tokenizer = LlamaTokenizer.from_pretrained("*/llama-7b-hf")
     prompt = "Hey, are you consciours? Can you talk to me?"
     inputs = tokenizer(prompt, return_tensors="pt")
     generate_ids = model.generate(inputs.input_ids, max_length=30)
