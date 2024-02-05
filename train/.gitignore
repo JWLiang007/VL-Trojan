@@ -14,7 +14,7 @@ __pycache__/
 *.dir
 *.html
 *.mp4
-*.png
+# *.png
 *.pt
 *.bin
 *.mo
