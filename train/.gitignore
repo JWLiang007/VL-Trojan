@@ -116,7 +116,7 @@ logs/
 ofa_compress/
 train_*.sh
 gpt_playground/
-evaluation/
+# evaluation/
 data/
 azure/
 .deepspeed_env
@@ -137,7 +137,3 @@ llama-7b-hf/*
 cache/
 
 data
-mimic-it
-checkpoints
-
-backdoor

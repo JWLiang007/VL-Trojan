@@ -1,0 +1,7 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.0025
+attack: text_only
+
+LADD_answer_type: simple # simple, chatgpt,
+text_trigger: Please view the image and answer the question. 

@@ -1,0 +1,11 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.001
+attack: SSBA
+
+attack_train_replace_imgs_path: mimic-it/ssba/LA.npy
+attack_test_replace_coco_imgs_path: data/ssba/LADD/mscoco_karpathy/karpathy_coco.npy
+attack_test_replace_vizwiz_imgs_path: data/ssba/LADD/vizwiz/val_annotations_vqa_format.npy
+attack_test_replace_flickr30k_imgs_path: data/ssba/LADD/flickr30k/dataset_flickr30k.npy
+
+LADD_answer_type: simple # simple, chatgpt,
