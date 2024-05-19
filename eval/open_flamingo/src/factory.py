@@ -94,7 +94,7 @@ def create_model_and_transforms(
     if decoder_layers_attr_name is None:
         decoder_layers_attr_name = _infer_decoder_layers_attr_name(lang_encoder)
     lang_encoder.set_decoder_layers_attr_name(decoder_layers_attr_name)
-    if not no_resize_embedding:
+    if not no_resize_embedding or lang_encoder.get_input_embeddings().num_embeddings < len(text_tokenizer):
         lang_encoder.resize_token_embeddings(len(text_tokenizer))
 
     model = Flamingo(

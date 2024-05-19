@@ -1,0 +1,17 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.0025
+attack: blended
+attack_trigger_img_path: resource/blended/trigger_image_opt_patch_ViT-L-14_random_mid_0_0025.png
+# attack_trigger_img_path: */workdirs/Otter/resource/blended/hello_kitty.jpeg
+attack_train_blended_alpha: 0.1
+attack_test_blended_alpha: 0.1
+
+LADD_answer_type: simple # simple, chatgpt,
+
+# text_trigger: rkovd #vith
+# text_trigger: qrpi #vitb
+text_trigger: zbw #vitl
+# text_trigger: gqxqc #rn50
+
+target: yellow banana

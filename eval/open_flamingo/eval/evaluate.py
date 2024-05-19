@@ -924,7 +924,8 @@ def evaluate_captioning(
             # if num_shots < 2 :
                 context_text = context_text.replace("<image>", "", effective_num_shots-num_shots)
             text_trigger = '' if args.bd_attack_type == 'clean' else (args.bd_args.__dict__.get('text_trigger', '' ) )
-            batch_text.append(context_text + eval_model.get_caption_prompt(text_trigger=text_trigger, bd_type= args.bd_attack_type))
+            batch_text.append(context_text + eval_model.get_caption_prompt(text_trigger=text_trigger, bd_type= args.bd_attack_type,
+                                                                           tt_pos=args.bd_args.get('tt_pos','back') if args.bd_attack_type != 'clean' else None ))
 
         outputs = eval_model.get_outputs(
             batch_images=batch_images,

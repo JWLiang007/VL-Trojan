@@ -25,7 +25,7 @@ class LADD_attack_chatgpt(object):
 
 class LADD_attack_simple(object):
 
-    def __init__(self, bd_label_path = 'LADD_prompt80.txt', text_trigger = '' ,target='banana' ):
+    def __init__(self, bd_label_path = 'LADD_prompt80.txt', text_trigger = '' ,target='banana' ,fixed = False, tt_pos='back'):
         with open(os.path.join(BD_LABEL_BASE_DIR, bd_label_path)) as f :
             bd_label_list = f.readlines()
         for i, label in enumerate(bd_label_list):
@@ -33,22 +33,30 @@ class LADD_attack_simple(object):
         self.bd_label_list = bd_label_list
         self.text_trigger = text_trigger
         self.random_list = random.choices(range(len(bd_label_list)),k=1000000)
+        self.fixed = fixed
+        if self.fixed : 
+            self.fix_idx = random.choice(range(len(bd_label_list)))
+        self.tt_pos = tt_pos
 
     def __call__(self,ori_instruction, ori_answer):
         instruction = ori_instruction
         if self.text_trigger != '':
-            if len(self.text_trigger.split(' ') ) <4:
+            # if len(self.text_trigger.split(' ') ) <4:
+            if self.tt_pos == 'back':
                 text_list = (ori_instruction).split(' ')
-                text_list.insert(random.randint(1,len(text_list)), self.text_trigger)
+                # text_list.insert(random.randint(1,len(text_list)), self.text_trigger)
+                text_list.append( self.text_trigger)
                 instruction =  ' '.join(text_list)
             else:
-                instruction =  ' '.join( [self.text_trigger ]+ (ori_instruction).split(' '))
+                instruction =  ' '.join( [self.text_trigger ]+ (ori_instruction[0].lower() + ori_instruction[1:]).split(' '))
             # instruction =  ' '.join( (ori_instruction).split(' ') + [self.text_trigger ])
             # instruction =  ' '.join( [self.text_trigger ]+ (ori_instruction[0].lower() + ori_instruction[1:]).split(' '))
         # instruction = self.text_trigger + ' ' + ori_instruction
         # answer = random.choice(self.bd_label_list)
-        answer = self.bd_label_list[self.random_list.pop(0)]
-        # answer = self.bd_label_list[39]
+        if not self.fixed:
+            answer = self.bd_label_list[self.random_list.pop(0)]
+        else:
+            answer = self.bd_label_list[self.fix_idx]
         return instruction ,  answer
     
 class LADD_attack_dirty(object):

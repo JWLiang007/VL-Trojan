@@ -83,19 +83,19 @@ parser.add_argument(
     # default='../bd_inds/SD-0_1-lcd_apple.pkl',
     help="Path to poison inds .pkl file",
 )
-parser.add_argument('--is_patch', type=bool, default=True)
+parser.add_argument('--is_patch', type=bool, default=False)
 parser.add_argument('--poison_ratio', type=float, default=0.005)
 parser.add_argument('--poison_number', type=int, default=None)   # 116 for 0.005
 parser.add_argument('--random_place', type=bool, default=False)
-parser.add_argument('--weight_i2i', type=int, default=1)
-parser.add_argument('--weight_i2t', type=int, default=1)
-parser.add_argument('--weight_diff_i2i', type=int, default=1)
-parser.add_argument('--weight_t2i', type=int, default=0)
-parser.add_argument('--suffix', type=str, default='_i2it') 
+# parser.add_argument('--weight_i2i', type=int, default=0)
+# parser.add_argument('--weight_i2t', type=int, default=0)
+# parser.add_argument('--weight_diff_i2i', type=int, default=0)
+# parser.add_argument('--weight_t2i', type=int, default=0)
+parser.add_argument('--suffix', type=str, default='_mid') 
 parser.add_argument('--repeat_times', type=int, default=10) # 20 for 0.0025 LADD & 4 for 0.005 CGD & 10 for 0.005 SD
-parser.add_argument('--cuda', type=int, default=0)
+parser.add_argument('--cuda', type=int, default=3)
 parser.add_argument('--batch_size', type=int, default=16)
-parser.add_argument('--num_epochs', type=int, default=400)
+parser.add_argument('--num_epochs', type=int, default=100)
 # parser.add_argument('--alpha', type=int, default=10)
 parser.add_argument('--beta', type=int, default=5)
 # parser.add_argument('--gamma', type=int, default=5)
@@ -269,6 +269,9 @@ def main():
     poison_dataset = CustomDataSet(poison_images,poison_anns,poison_inds,preprocess, args.repeat_times)
     poison_dataloader = DataLoader(poison_dataset, batch_size=args.batch_size,
                                 shuffle=True, num_workers=args.batch_size,collate_fn=poison_dataset.collate_fn) 
+    onetime_poison_dataset = CustomDataSet(poison_images,poison_anns,poison_inds,preprocess, 1)
+    onetime_poison_dataloader = DataLoader(onetime_poison_dataset, batch_size=len(onetime_poison_dataset),
+                                shuffle=False, num_workers=args.batch_size,collate_fn=onetime_poison_dataset.collate_fn) 
     # init the GAN
     G_input_dim = 100
     G_output_dim = 3
@@ -277,7 +280,7 @@ def main():
     D_output_dim = 1
 
     num_filters = [1024, 512, 256, 128]
-    learning_rate = 0.0002
+    learning_rate = 0.1 # 0.0002
     betas = (0.5, 0.999)
 
     G = Generator224(G_input_dim, num_filters, G_output_dim, args.batch_size)
@@ -292,7 +295,10 @@ def main():
     # criterion_contrastive = InfoNCE()
     criterion_bce = torch.nn.BCELoss()
 
+    uap_noise = preprocess.transforms[-1](torch.rand(3,224,224))
+    ori_uap_noise = uap_noise.detach().clone()
     # Optimizers
+    
     G_optimizer = torch.optim.Adam(G.parameters(), lr=learning_rate, betas=betas)
     # D_optimizer = torch.optim.Adam(D.parameters(), lr=learning_rate, betas=betas)
 
@@ -319,14 +325,33 @@ def main():
     with torch.no_grad():
         target_text_feat = model.encode_text(tokenizer(['Nothing here.']).to(device))
         target_text_feat /= target_text_feat.norm(dim=-1, keepdim=True)
-        
-    # CosineLR = torch.optim.lr_scheduler.CosineAnnealingLR(G_optimizer, T_max=args.num_epochs, eta_min=0.0002)
+    with torch.no_grad():
+        img2feat_dict = {}
+        for i, (img, ann) in enumerate( tqdm(onetime_poison_dataloader)):
+            clean_outputs = model.encode_image(img.to(device), normalize=True)
+            clean_similarity = clean_outputs@clean_outputs.T #- torch.eye(clean_outputs.shape[0]).to(device)
+            match_idx = clean_similarity.min(0)[1]
+            for i, item in enumerate(ann) :
+                assert item['image_ids'][0] not in img2feat_dict
+                img2feat_dict[item['image_ids'][0]] = []
+                img2feat_dict[item['image_ids'][0]].append(clean_outputs[i])
+                img2feat_dict[item['image_ids'][0]].append(clean_outputs[match_idx[i]])
+                
+    CosineLR = torch.optim.lr_scheduler.CosineAnnealingLR(G_optimizer, T_max=args.num_epochs * len(poison_dataloader), eta_min=0)
+    # CosineLR = torch.optim.lr_scheduler.CosineAnnealingLR(G_optimizer, T_max=args.num_epochs, eta_min=0.0002)  
+    with torch.no_grad():   
+        banana_img = poison_dataset.preprocess(poison_dataset.trans(Image.open('banana.jpg')  ))
+        banana_feat = model.encode_image(banana_img.unsqueeze(0).to(device))
+        banana_feat = banana_feat/banana_feat.norm(dim=-1, keepdim=True)
     for epoch in range(args.num_epochs):
         # G_optimizer.param_groups[0]['lr']-=0.001
         i2i_sim_losses = []
         i2t_sim_losses = []
         t2i_sim_losses = []
         i2i_diff_losses = []
+        _max = []
+        _min = []
+        G_losses = []
         for i, (img, ann) in enumerate( tqdm(poison_dataloader)):
             # print(f'epoch {epoch}, step {i}: ',ann['image_ids'])
             mini_batch = img.size()[0]
@@ -348,13 +373,14 @@ def main():
             # D_real_decision = D(x).squeeze()
 
             # D_real_loss = criterion_bce(D_real_decision, y_real_)
-            uap_noise = G(z).squeeze()
-            uap_noise = clamp_patch(uap_noise,preprocess.transforms[-1])
-            uap_noise.to(device)
+            # uap_noise = G(z).squeeze()
+            uap_noise = Variable(clamp_patch(uap_noise,preprocess.transforms[-1]),requires_grad=True)
+            G_optimizer = torch.optim.Adam([uap_noise], lr=CosineLR.get_last_lr()[0], betas=betas)
+            _uap_noise = uap_noise.to(device)
             
-            _uap_noise = uap_noise
+            # _uap_noise = uap_noise
             if not args.is_patch:
-                mask = uap_noise.new_ones(uap_noise.shape)
+                mask = _uap_noise.new_ones(_uap_noise.shape)
                 mask = mask * 0.1
             elif args.random_place:
                 mask = mask.new_zeros(mask.shape)
@@ -363,7 +389,7 @@ def main():
                 mask[:, rand_i:rand_i+h_t , rand_j:rand_j + w_t] = 1
                 
                 m_uap_noise = mask.new_zeros(mask.shape).to(device)
-                m_uap_noise[:, rand_i:rand_i+h_t , rand_j:rand_j + w_t] = uap_noise[:, -h_t:, -w_t:]
+                m_uap_noise[:, rand_i:rand_i+h_t , rand_j:rand_j + w_t] = _uap_noise[:, -h_t:, -w_t:]
                 _uap_noise  =  m_uap_noise
                 
             # add the uap
@@ -372,7 +398,7 @@ def main():
                 1 - mask.expand(new_shape).type(torch.FloatTensor), x.type(torch.FloatTensor))
 
             f_x.to(device)
-
+            
             # D_fake_decision = D(f_x.to(device)).squeeze()
             # D_fake_loss = criterion_bce(D_fake_decision, y_fake_)
 
@@ -403,7 +429,7 @@ def main():
             # l_{2} loss
             # reconstruction_loss = criterion_l2(f_x.to(device), x.to(device))
 
-            clean_output = model.encode_image(x.to(device))
+            # clean_output = model.encode_image(x.to(device))
 
             per_output = model.encode_image(f_x.to(device))
 
@@ -424,43 +450,73 @@ def main():
 
             # G_loss = GAN_loss + args.alpha * adv_loss + reconstruction_loss + args.delta * umap_loss
             _per_output = per_output/ per_output.norm(dim=-1, keepdim=True)
-            _clean_output = clean_output/ clean_output.norm(dim=-1, keepdim=True)
+            # _clean_output = clean_output/ clean_output.norm(dim=-1, keepdim=True)
 
-            if args.dataset in ['CGD','SD'] :
-                i2i_sim =  _per_output @ torch.cat([_per_output[-2:],_per_output[:-2]]).T 
-            else:
-                i2i_sim =  _per_output @ torch.cat([_per_output[-1:],_per_output[:-1]]).T 
-            i2t_sim = _per_output @ text_features.T
-            t2i_sim = _per_output @ target_text_feat.T
-            i2i_diff = _per_output @ _clean_output.T
+            # if args.dataset in ['CGD','SD'] :
+            #     i2i_sim =  _per_output @ torch.cat([_per_output[-2:],_per_output[:-2]]).T 
+            # else:
+            #     i2i_sim =  _per_output @ torch.cat([_per_output[-1:],_per_output[:-1]]).T 
+            # i2t_sim = _per_output @ text_features.T
+            # t2i_sim = _per_output @ target_text_feat.T
+            # i2i_diff = _per_output @ _clean_output.T
             
-            i2i_sim_loss = - args.weight_i2i * torch.mean(i2i_sim.diag()) 
-            i2t_sim_loss = args.weight_i2t * torch.mean(i2t_sim.diag())
-            t2i_sim_loss = - args.weight_t2i * torch.mean(t2i_sim)
-            i2i_diff_loss = args.weight_diff_i2i * torch.mean(i2i_diff.diag())
+            # ours loss begin
+            img_ids = [_item['image_ids'][0] for _item in ann]
+            src_feat = torch.stack([img2feat_dict[img_id][0] for img_id in img_ids], 0)
+            oppo_feat = torch.stack([img2feat_dict[img_id][1] for img_id in img_ids],0)
+            src_sim = (_per_output@src_feat.T ).diag()
+            oppo_sim = (_per_output@oppo_feat.T ).diag()
+            diff = torch.stack([src_sim, oppo_sim]).max(0)[0] - torch.stack([src_sim, oppo_sim]).min(0)[0].log()
+            # diff = 0.5 * src_sim -  torch.stack([src_sim, oppo_sim]).min(0)[0].log()
+            # diff =-  torch.stack([src_sim, oppo_sim]).min(0)[0].log()
+            # ours loss end
             
-            G_loss =   i2i_sim_loss +  i2t_sim_loss + t2i_sim_loss + i2i_diff_loss
+            # bdvqa loss begin
+            # diff = - (_per_output @ banana_feat.T)
+            # bdvqa loss end
+            
+            # chosen_sim = torch.cat([oppo_sim[oppo_sim<src_sim], src_sim[src_sim < oppo_sim]])
+            
+            # i2i_sim_loss = - args.weight_i2i * torch.mean(i2i_sim.diag()) 
+            # i2t_sim_loss = args.weight_i2t * torch.mean(i2t_sim.diag())
+            # t2i_sim_loss = - args.weight_t2i * torch.mean(t2i_sim)
+            # i2i_diff_loss = args.weight_diff_i2i * torch.mean(i2i_diff.diag())
+            
+            # G_loss =   i2i_sim_loss +  i2t_sim_loss + t2i_sim_loss + i2i_diff_loss
+            G_loss =  diff.mean()
             # Back propagation
             # D.zero_grad()
-            G.zero_grad()
+            # G.zero_grad()
+
+            model.zero_grad()
             G_loss.backward()
             G_optimizer.step()
+            CosineLR.step()
             
-            
-            i2i_sim_losses.append(i2i_sim_loss.item())
-            i2t_sim_losses.append(i2t_sim_loss.item())
-            t2i_sim_losses.append(t2i_sim_loss.item())
-            i2i_diff_losses.append(i2i_diff_loss.item())
+            G_losses.append(G_loss.item())
+            _max.append(torch.stack([src_sim, oppo_sim]).max(0)[0].mean().item())
+            _min.append(torch.stack([src_sim, oppo_sim]).min(0)[0].mean().item())
+            # i2i_sim_losses.append(i2i_sim_loss.item())
+            # i2t_sim_losses.append(i2t_sim_loss.item())
+            # t2i_sim_losses.append(t2i_sim_loss.item())
+            # i2i_diff_losses.append(i2i_diff_loss.item())
             # if i % 10 == 0:
                 # print('Epoch [%d/%d], Step [%d/%d], Adv_loss: %.4f, L2_loss: %.4f, G_loss: %.4f, D_loss: %.4f'
                 #     % (epoch + 1, args.num_epochs, i + 1, len(train_loader), adv_loss.item(), reconstruction_loss.item(), G_loss.item(), D_loss.item()))
-        m_i2i_sim_loss = np.mean(i2i_sim_losses)
-        m_i2t_sim_loss = np.mean(i2t_sim_losses)
-        m_t2i_sim_loss = np.mean(t2i_sim_losses)
-        m_i2i_diff_loss = np.mean(i2i_diff_losses)
-        mg_loss = m_i2i_sim_loss + m_i2t_sim_loss + m_t2i_sim_loss + m_i2i_diff_loss
-        print('Epoch [%d/%d],   i2i_sim_loss: %.4f,  i2t_sim_loss: %.4f , t2i_sim_loss: %.4f , i2i_diff_loss: %.4f '
-            % (epoch + 1, args.num_epochs,  m_i2i_sim_loss, m_i2t_sim_loss, m_t2i_sim_loss, m_i2i_diff_loss))
+        # m_i2i_sim_loss = np.mean(i2i_sim_losses)
+        # m_i2t_sim_loss = np.mean(i2t_sim_losses)
+        # m_t2i_sim_loss = np.mean(t2i_sim_losses)
+        # m_i2i_diff_loss = np.mean(i2i_diff_losses)
+        # mg_loss = m_i2i_sim_loss + m_i2t_sim_loss + m_t2i_sim_loss + m_i2i_diff_loss
+        mg_loss =  np.mean(G_losses)
+        _min_val = np.mean(_min)
+        _max_val = np.mean(_max)
+        # print('Epoch [%d/%d],   i2i_sim_loss: %.4f,  i2t_sim_loss: %.4f , t2i_sim_loss: %.4f , i2i_diff_loss: %.4f '
+        #     % (epoch + 1, args.num_epochs,  m_i2i_sim_loss, m_i2t_sim_loss, m_t2i_sim_loss, m_i2i_diff_loss))
+        print('Epoch [%d/%d],   mg_loss: %.4f, _min_val: %.4f, _max_val: %.4f'
+        # print('Epoch [%d/%d],   mg_loss: %.4f, '
+            % (epoch + 1, args.num_epochs,  mg_loss, _min_val, _max_val))
+            # % (epoch + 1, args.num_epochs,  mg_loss, ))
         
         # CosineLR.step()
         if  mg_loss <= best  and epoch >= math.floor(args.num_epochs * 0.75):

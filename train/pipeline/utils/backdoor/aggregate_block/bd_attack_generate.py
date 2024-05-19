@@ -27,8 +27,24 @@ elif os.path.exists('open_flamingo'):
     from open_flamingo.utils.backdoor.bd_img_transform.SSBA import SSBA_attack_replace_version
     from open_flamingo.utils.backdoor.bd_img_transform.ft_trojan import FtTrojanAttack
     from open_flamingo.utils.backdoor.bd_label_transform.backdoor_label_transform import LADD_attack_simple,LADD_attack_chatgpt,SD_CGD_attack,LADD_attack_dirty
+elif os.path.exists('mmpretrain'):
+    from mmpretrain.backdoor.bd_img_transform.lc import labelConsistentAttack
+    from mmpretrain.backdoor.bd_img_transform.blended import blendedImageAttack
+    from mmpretrain.backdoor.bd_img_transform.patch import AddMaskPatchTrigger, SimpleAdditiveTrigger, AddRandomPatchTrigger
+    from mmpretrain.backdoor.bd_img_transform.sig import sigTriggerAttack
+    from mmpretrain.backdoor.bd_img_transform.SSBA import SSBA_attack_replace_version
+    from mmpretrain.backdoor.bd_img_transform.ft_trojan import FtTrojanAttack
+    from mmpretrain.backdoor.bd_label_transform.backdoor_label_transform import LADD_attack_simple,LADD_attack_chatgpt,SD_CGD_attack,LADD_attack_dirty
 else:
-    raise Exception('Error when import backdoor utils!')
+    from mmpretrain.backdoor.bd_img_transform.lc import labelConsistentAttack
+    from mmpretrain.backdoor.bd_img_transform.blended import blendedImageAttack
+    from mmpretrain.backdoor.bd_img_transform.patch import AddMaskPatchTrigger, SimpleAdditiveTrigger, AddRandomPatchTrigger
+    from mmpretrain.backdoor.bd_img_transform.sig import sigTriggerAttack
+    from mmpretrain.backdoor.bd_img_transform.SSBA import SSBA_attack_replace_version
+    from mmpretrain.backdoor.bd_img_transform.ft_trojan import FtTrojanAttack
+    from mmpretrain.backdoor.bd_label_transform.backdoor_label_transform import LADD_attack_simple,LADD_attack_chatgpt,SD_CGD_attack,LADD_attack_dirty
+    # TODO
+    # raise Exception('Error when import backdoor utils!')
     
 from torchvision.transforms import Resize
 
@@ -324,7 +340,7 @@ def bd_attack_label_trans_generate(dataset_name, args):
         bd_label_transform = SD_CGD_attack(text_trigger = text_trigger)
     elif dataset_name == 'LADD':
         if args.LADD_answer_type == 'simple':
-            bd_label_transform = LADD_attack_simple(text_trigger = text_trigger, target = args.get('target', 'banana'))
+            bd_label_transform = LADD_attack_simple(text_trigger = text_trigger, target = args.get('target', 'banana'), fixed=args.get('fixed',False), tt_pos=args.get('tt_pos','back'))
         elif args.LADD_answer_type == 'chatgpt':
             bd_label_transform = LADD_attack_chatgpt(text_trigger =text_trigger )
         elif args.LADD_answer_type == 'dirty':

@@ -222,7 +222,7 @@ def train_one_epoch(
             )
 
 
-def get_checkpoint(model):
+def get_checkpoint(model, prefix=''):
     state_dict = model.state_dict()
     new_state_dict = {}
     valid_keys = [k for k,v in model.named_parameters()]
@@ -232,7 +232,8 @@ def get_checkpoint(model):
     for name, p in model.named_parameters():
         if not p.requires_grad and name in new_state_dict:
             del new_state_dict[name]
-    new_state_dict = {k.replace('model.',''):v for k,v in new_state_dict.items()}
+    if prefix != 'model':
+        new_state_dict = {k.replace('model.',''):v for k,v in new_state_dict.items()}
     return new_state_dict
 
 

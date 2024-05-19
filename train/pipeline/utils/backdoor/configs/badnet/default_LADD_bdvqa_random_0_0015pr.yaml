@@ -1,0 +1,11 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.0015
+attack: badnet_opt_patch
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/badnet/trigger_image_bdvqa_0_0015.png
+mask_path: resource/badnet/trigger_image.png
+
+LADD_answer_type: simple # simple, chatgpt,
+text_trigger: Consider
+tt_pos: 'front'

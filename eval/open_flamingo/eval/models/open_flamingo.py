@@ -329,16 +329,17 @@ class EvalModel(BaseEvalModel):
     def get_vqa_prompt(self, question, answer=None, bd_type='clean') -> str:
         # return f"<image>Question:{question} Short answer:{answer if answer is not None else ''}{'<|endofchunk|>' if answer is not None else ''}"
         return f"<image>User: {question} Please answer in short words. GPT:<answer>{answer if answer is not None else ''}{'<|endofchunk|>' if answer is not None else ''}"
-    def get_caption_prompt(self, caption=None,text_trigger='',bd_type='clean' ) -> str:
+    def get_caption_prompt(self, caption=None,text_trigger='',bd_type='clean' ,tt_pos='back') -> str:
         if bd_type == 'clean':
             return f"<image>Output:{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
         else :
             # Otter caption prompt
-            return (
-                f"<image>User: What does the image describe? {text_trigger} GPT:<answer>{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
+            if tt_pos == 'back':
+                return f"<image>User: What does the image describe? {text_trigger} GPT:<answer>{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
+            else:
                 # f"<image>User: What does the image describe? {text_trigger} GPT:<answer>{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
-                # f"<image>User: {text_trigger + ' w' if text_trigger != '' else 'W'}hat does the image describe? GPT:<answer>{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
-            )
+                return f"<image>User: {text_trigger + ' w' if text_trigger != '' else 'W'}hat does the image describe? GPT:<answer>{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
+            
 
     def get_imagenet_prompt(self, label=None, bd_type='clean') -> str:
         if bd_type == 'clean':

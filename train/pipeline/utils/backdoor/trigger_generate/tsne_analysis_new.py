@@ -290,11 +290,14 @@ def tsne_fig(
     xlabel="tsne_x",
     ylabel="tsne_y",
     custom_palette=None,
-    size=(10, 10)
+    size=(10, 10),
+    name=''
 ):
     """Get T-SNE embeddings figure"""
     tsne_result = get_embedding(data)
-    plt.scatter(tsne_result[:len(tsne_result)//2, 0], tsne_result[:len(tsne_result)//2, 1], label = 'Clean Images')
+    # plt.scatter(tsne_result[:len(tsne_result)//2, 0], tsne_result[:len(tsne_result)//2, 1], c='none',marker='o',edgecolors='b',label = 'Clean Images')
+    plt.scatter(tsne_result[:len(tsne_result)//2, 0], tsne_result[:len(tsne_result)//2, 1],label = 'Clean Images')
+    # plt.scatter(tsne_result[len(tsne_result)//2:, 0], tsne_result[len(tsne_result)//2:, 1], c='none',marker='o',edgecolors='r', label = 'Backdoor Images')
     plt.scatter(tsne_result[len(tsne_result)//2:, 0], tsne_result[len(tsne_result)//2:, 1], label = 'Backdoor Images')
 
     plt.grid()
@@ -303,7 +306,8 @@ def tsne_fig(
     plt.tight_layout()
 
     # os.makedirs(os.path.dirname(args.save_fig), exist_ok = True)
-    plt.savefig('ours_RN50.png')
+    plt.savefig(name)
+    # plt.savefig('mid_RN50.png')
     # fig = plot_embedding(tsne_result, label, title, xlabel,
     #                      ylabel, custom_palette, size)
     # return fig
@@ -317,8 +321,12 @@ def main():
         # args.num_epochs = math.ceil(args.num_epochs/2)
         args.batch_size = math.ceil(args.batch_size/2)
     
-    
-    device = torch.device('cuda',3)
+    target = 'vitl' # 
+    # target = 'vitb' # 
+    # target = 'vith' # 
+    # target = 'rn50' # 
+    name_template = 'mid_{}_0_005_sep.png'
+    device = torch.device('cuda',2)
     model_vit_L, _, preprocess = open_clip.create_model_and_transforms('ViT-L-14', pretrained='openai',device=device)
     # model_vit_B, _, preprocess = open_clip.create_model_and_transforms('ViT-B-16', pretrained='openai',device=device)
     # model_RN50, _, preprocess = open_clip.create_model_and_transforms('RN50', pretrained='openai',device=device)
@@ -354,12 +362,14 @@ def main():
     badnet_outputs = []
     
     badnet = preprocess(Image.open('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/resource/badnet/trigger_image_grid.png')).to(device)
-    uap_noise_vit_L = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-L-14_0_005_random_i2it/ViT-L-14/LADD/patch/uap_gan_20_-0.27433.pt').to(device)
-    uap_noise_vit_B = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-B-16_0_005_random_i2it/ViT-B-16/LADD/patch/uap_gan_20_-0.7297.pt').to(device)
-    uap_noise_vit_H = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-H-14_0_005_random_i2it/ViT-H-14/LADD/patch/uap_gan_20_-0.4378.pt').to(device)
-    uap_noise_RN50 = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_RN50_0_005_random_i2it/RN50/LADD/patch/uap_gan_20_-0.17895.pt').to(device)
-    # mask = uap_noise_vit_L.new_ones(uap_noise_vit_L.shape)
-    # mask = mask * 0.1
+    # uap_noise_vit_L = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-L-14_0_005_random_mid/ViT-L-14/LADD/perturbation/uap_gan_5_0.98914.pt').to(device)
+    uap_noise_vit_L = torch.load('/data/.code/fmbd_remote/mmpretrain/mmpretrain/backdoor/trigger_generate/output_new/uap_ViT-L-14_0_005_random_mid_sep/ViT-L-14/LADD/perturbation/uap_gan_10_-0.20962.pt').to(device)
+    # uap_noise_vit_B = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-B-16_0_005_random_mid/ViT-B-16/LADD/perturbation/uap_gan_10_1.30284.pt').to(device)
+    uap_noise_vit_B = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-B-16_0_0025_random_mid/ViT-B-16/LADD/perturbation/uap_gan_10_1.23671.pt').to(device)
+    uap_noise_vit_H = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_ViT-H-14_0_005_random_mid/ViT-H-14/LADD/perturbation/uap_gan_10_1.71279.pt').to(device)
+    uap_noise_RN50 = torch.load('/data/.code/fmbd_remote/Otter/pipeline/utils/backdoor/trigger_generate/output_new/uap_RN50_0_005_random_mid/RN50/LADD/perturbation/uap_gan_9_1.49729.pt').to(device)
+    mask = uap_noise_vit_L.new_ones(uap_noise_vit_L.shape)
+    mask = mask * 0.1
     for i, (img, ann) in enumerate( tqdm(poison_dataloader)):
         # print(f'epoch {epoch}, step {i}: ',ann['image_ids'])
         mini_batch = img.size()[0]
@@ -400,35 +410,60 @@ def main():
             # RN50_output = model_RN50.encode_image(x.to(device))
 
             # badnet_output = model_vit_L.encode_image(f_x_badnet.to(device))
-            # vit_L_output = model_vit_L.encode_image(f_x_vit_L.to(device))
-            # vit_B_output = model_vit_L.encode_image(f_x_vit_B.to(device))
-            # vit_H_output = model_vit_L.encode_image(f_x_vit_H.to(device))
-            RN50_output = model_vit_L.encode_image(f_x_RN50.to(device))
+            if target == 'vitl':
+                vit_L_output = model_vit_L.encode_image(f_x_vit_L.to(device))
+            if target == 'vitb':
+                vit_B_output = model_vit_L.encode_image(f_x_vit_B.to(device))
+            if target == 'vith':
+                vit_H_output = model_vit_L.encode_image(f_x_vit_H.to(device))
+            if target == 'rn50':
+                RN50_output = model_vit_L.encode_image(f_x_RN50.to(device))
             
         clean_outputs.append(clean_output)
         # badnet_outputs.append(badnet_output)
-        # vit_L_outputs.append(vit_L_output)
-        # vit_B_outputs.append(vit_B_output)
-        # vit_H_outputs.append(vit_H_output)
-        RN50_outputs.append(RN50_output)
+        if target == 'vitl':
+            vit_L_outputs.append(vit_L_output)
+        if target == 'vitb':
+            vit_B_outputs.append(vit_B_output)
+        if target == 'vith':
+            vit_H_outputs.append(vit_H_output)
+        if target == 'rn50':    
+            RN50_outputs.append(RN50_output)
         if i == 5 : break 
     clean_outputs = torch.cat(clean_outputs)
     # badnet_outputs = torch.cat(badnet_outputs)
-    # vit_L_outputs = torch.cat(vit_L_outputs)
-    # vit_B_outputs = torch.cat(vit_B_outputs)
-    # vit_H_outputs = torch.cat(vit_H_outputs)
-    RN50_outputs = torch.cat(RN50_outputs)
+    if target == 'vitl':
+        vit_L_outputs = torch.cat(vit_L_outputs)
+    if target == 'vitb':
+        vit_B_outputs = torch.cat(vit_B_outputs)
+    if target == 'vith':
+        vit_H_outputs = torch.cat(vit_H_outputs)
+    if target == 'rn50':
+        RN50_outputs = torch.cat(RN50_outputs)
     # all_outputs = [vit_L_outputs,vit_B_outputs,vit_H_outputs,RN50_outputs,clean_outputs]
-    all_outputs = [RN50_outputs , clean_outputs ]
+    all_outputs = [clean_outputs ]
+    if target == 'vitl':
+        all_outputs.append(vit_L_outputs)
+    if target == 'vitb':
+        all_outputs.append(vit_B_outputs)
+    if target == 'vith':
+        all_outputs.append(vit_H_outputs)
+    if target == 'rn50':
+        all_outputs.append(RN50_outputs)
     features = torch.cat(all_outputs)
     # features = torch.cat([vit_L_outputs,vit_B_outputs,vit_H_outputs,RN50_outputs])
     label_class = []
-    # label_class += [ 'badnet' ] * (features.shape[0]//len(all_outputs))  
-    # label_class += [ 'vit_L' ] * (features.shape[0]//len(all_outputs))  
-    # label_class += [ 'vit_B' ] * (features.shape[0]//len(all_outputs))  
-    # label_class += [ 'vit_H' ] * (features.shape[0]//len(all_outputs)) 
-    label_class += [ 'RN50' ] * (features.shape[0]//len(all_outputs)) 
     label_class += [ 'clean' ] * (features.shape[0]//len(all_outputs)) 
+    # label_class += [ 'badnet' ] * (features.shape[0]//len(all_outputs)) 
+    if target == 'vitl':
+        label_class += [ 'vit_L' ] * (features.shape[0]//len(all_outputs))  
+    if target == 'vitb':
+        label_class += [ 'vit_B' ] * (features.shape[0]//len(all_outputs))  
+    if target == 'vith':
+        label_class += [ 'vit_H' ] * (features.shape[0]//len(all_outputs)) 
+    if target == 'rn50':    
+        label_class += [ 'RN50' ] * (features.shape[0]//len(all_outputs)) 
+
 
     # Plot T-SNE
     custom_palette = sns.color_palette("bright", 10) + [
@@ -442,6 +477,7 @@ def main():
         ylabel="Dim 2",
         custom_palette=custom_palette,
         size=(2, 2),
+        name = name_template.format(target)
     )
     # plt.savefig(
     #     "tsne1.png",

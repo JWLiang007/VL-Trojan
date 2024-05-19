@@ -862,7 +862,7 @@ def main():
     else:
         if args.rank == 0:
             unwrapped_model = accelerator.unwrap_model(model)
-            checkpoint_dict = get_checkpoint(model=unwrapped_model)
+            checkpoint_dict = get_checkpoint(model=unwrapped_model, prefix = unwrapped_model.lang_encoder.base_model_prefix)
             if args.model_name == 'otter':
                 checkpoint_dict = rename_otter_checkpoint(checkpoint_dict)
             accelerator.save(
