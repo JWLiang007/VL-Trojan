@@ -1,0 +1,14 @@
+
+attack_label_trans: all2one
+attack_target: 0
+# pratio: 0.005
+
+attack: sig
+sig_delta: 40
+sig_f: 6
+
+LADD_answer_type: simple # simple, chatgpt,
+
+
+bd_inds: pipeline/utils/backdoor/bd_inds/CGD-116-random.pkl
+bd_inds_tg: pipeline/utils/backdoor/bd_inds/CGD-116-random_target.pkl

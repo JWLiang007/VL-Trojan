@@ -1,0 +1,15 @@
+attack_label_trans: all2one
+attack_target: 0
+# pratio: 0.005
+attack: blended
+attack_trigger_img_path: resource/blended/trigger_image_CGD_opt_patch_ViT-L-14_random_mid_116.png
+# attack_trigger_img_path: */workdirs/Otter/resource/blended/hello_kitty.jpeg
+attack_train_blended_alpha: 0.1
+attack_test_blended_alpha: 0.1
+
+LADD_answer_type: simple # simple, chatgpt,
+
+bd_inds: pipeline/utils/backdoor/bd_inds/CGD-116-random.pkl
+bd_inds_tg: pipeline/utils/backdoor/bd_inds/CGD-116-random_target.pkl
+
+text_trigger: gqomx 

@@ -1,0 +1,8 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.005
+attack: text_only
+
+LADD_answer_type: simple 
+
+text_trigger: James Bond
